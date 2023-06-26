@@ -3,6 +3,8 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const User = require("../model/User");
+// const ObjectId = require('mongoose').Types.ObjectId;
+// const ObjectID = require('mongodb').ObjectID;
 
 //update user
 router.put("/:id", async (req, res) => {
@@ -45,10 +47,11 @@ router.delete("/:id", async (req, res) => {
 });
 
 //get a user
-router.post("/specificUser", async (req, res) => {
+router.get("/specificUser", async (req, res) => {
   console.log(req.body)
   try {
     const user = await User.findById(req.body.userId);
+    console.log(user);
     const { password, createdAt, updatedAt, ...other } = user._doc;
     res.status(200).json(other);
   } catch (err) {
@@ -65,14 +68,14 @@ router.put("/follow/:id", async (req, res) => {
       const user = await User.findById(req.params.id);
       const currentUser = await User.findById(req.body.userId);
       console.log(user.username,currentUser.username)
-      // if (!user.followers.includes(req.body.userId)) {
-      //   await user.updateOne({ $push: { followers: req.body.userId } });
-      //   await currentUser.updateOne({ $push: { following: req.body.id } });
-      //   res.status(200).json("user has been followed");
-      // } else {
-      //   res.status(403).json("you are following already this user");
-      // }
-     return res.status(200).json("ok")
+      if (!user.followers.includes(req.body.userId)) {
+        await user.updateOne({ $push: { followers: req.body.userId } });
+        await currentUser.updateOne({ $push: { following: req.params.id } });
+        res.status(200).json("user has been followed");
+      } else {
+        res.status(403).json("you are following already this user");
+      }
+    //  return res.status(200).json("ok")
     } catch (err) {
      return res.status(500).json(err);
     }
@@ -83,6 +86,29 @@ router.put("/follow/:id", async (req, res) => {
 
 
 // unfollow a user
+
+router.put("/unfollow/:id", async (req, res) => {
+  if (req.body.userId !== req.params.id) {
+    console.log(req.body.userId,req.params.id)
+    try {
+      const user = await User.findById(req.params.id);
+      const currentUser = await User.findById(req.body.userId);
+      console.log(user.username,currentUser.username)
+      if (user.followers.includes(req.body.userId)) {
+        await user.updateOne({ $pull: { followers: req.body.userId } });
+        await currentUser.updateOne({ $pull: { following: req.params.id } });
+        res.status(200).json("user has been unfollowed");
+      } else {
+        res.status(403).json("you don't follow this user");
+      }
+    //  return res.status(200).json("ok")
+    } catch (err) {
+     return res.status(500).json(err);
+    }
+  } else {
+    return res.status(200).json("you can't unfollow yourself");
+  }
+});
 
 // eslint-disable-next-line no-undef
 module.exports = router;

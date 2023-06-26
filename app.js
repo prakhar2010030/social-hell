@@ -16,6 +16,7 @@ require("./src/db/connection");
 const userRouter = require("./src/routes/users");
 // eslint-disable-next-line no-undef
 const authRouter = require("./src/routes/auth");
+const postRouter = require("./src/routes/posts");
 const app = express();
 
 //to use dotenv package
@@ -36,6 +37,8 @@ app.use(
 );
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/posts", postRouter);
+
 
 app.listen(port, () => {
   console.log(`listening to port : ${port}`);
